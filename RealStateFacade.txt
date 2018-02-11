@@ -1,0 +1,86 @@
+import co.mil.ejercito.aplicacion.entity.DescripcionViviendas;
+import co.mil.ejercito.aplicacion.entity.DetalleViviendas;
+import co.mil.ejercito.aplicacion.entity.InformacionEmpresa;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+/**
+ *
+ * @author Administrator
+ */
+@Stateless
+public class RealStateFacade implements RealStateFacadeLocal {
+    private static final Logger LOG = Logger.getLogger(RealStateFacade.class.getName());
+    
+    
+    //%%%%%%%%%%%%%%%%%%%%%|    LA ENTITYMANAGER    |%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    @PersistenceContext(unitName = "RealStatePU")
+    private EntityManager em;
+    //%%%%%%%%%%%%%%%%%%%%%|    LA ENTITYMANAGER    |%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    @Override
+    public List<DescripcionViviendas> findYourPlace(String keyword) {
+        LOG.log(Level.INFO, "Entrada al metodo findYourPlace() ");
+        List<DescripcionViviendas> lista = new ArrayList();
+        try {
+            String SQL = " ";//si esta en blanco lanza el *from"  y trae todas las peliculas
+            if (keyword.equals("")) {
+                SQL = "SELECT * FROM DESCRIPCION_VIVIENDAS";
+
+            } else {
+                SQL = "select * from DESCRIPCION_VIVIENDAS where CANT_HABITACIONES like '%"//DE LO CONTRARIO FILTRA POR "TITULO" O "PRECIO"
+                        + keyword.trim() + "%'"
+                        + " OR PRECIO LIKE '%" + keyword.trim() + "%'"; // "trim() " es para remover los espacios en blanco
+            }
+
+            Query query = em.createNativeQuery(SQL, DescripcionViviendas.class);
+            lista = query.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Error  ", e);
+        }
+        LOG.log(Level.INFO, "Salida del metodo findYourPlace() ");
+        return lista;
+    }
+
+    @Override
+    public String joinOurNewsletter() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public String informacionEmpresa(String nit) {
+        LOG.log(Level.INFO, "Entrada al metodo informacionEmpresa() ");
+        InformacionEmpresa infEmpresa = new InformacionEmpresa();//crea una pelicula vacia
+        try {
+            infEmpresa = em.find(InformacionEmpresa.class, nit);//el "entity" va y busca la pelicula por el ID
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Error  ", e);
+        }
+        LOG.log(Level.INFO, "Salida del metodo informacionEmpresa() ");
+        
+        return infEmpresa.getNit();
+    }
+
+    @Override
+    public  Random specialOffers(BigDecimal idDescrVivienda) {
+        Random r = new Random();
+        try {
+            DetalleViviendas dtvivienda = em.find(DetalleViviendas.class, idDescrVivienda);
+            r = (Random)dtvivienda.getConsultaViviendasList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Error  ", e);
+        }
+        LOG.log(Level.INFO, "Salida del metodo consultarPeliculasPorCategoria ");
+        return r;
+    }
+}
